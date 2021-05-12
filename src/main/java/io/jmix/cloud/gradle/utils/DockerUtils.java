@@ -41,17 +41,7 @@ public final class DockerUtils {
     }
 
     public static DockerClient local() {
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-
-        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
-                .dockerHost(config.getDockerHost())
-                .sslConfig(config.getSSLConfig())
-                .maxConnections(10)
-                .build();
-
-        return DockerClientBuilder.getInstance(config)
-                .withDockerHttpClient(httpClient)
-                .build();
+        return client(DefaultDockerClientConfig.createDefaultConfigBuilder().build());
     }
 
     public static InputStream saveImage(DockerClient client, String imageName) {

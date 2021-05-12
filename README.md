@@ -1,8 +1,8 @@
-# Jmix Gradle Plugin
+# Jmix Cloud Gradle Plugin
 
-This repository contains Gradle plugin for building [Jmix](https://github.com/Haulmont/jmix-core) applications.
+This repository contains Gradle plugin for running [Jmix](https://github.com/Haulmont/jmix-core) applications in cloud environment.
 
-The plugin binaries are available at Gradle [plugin portal](https://plugins.gradle.org/plugin/io.jmix).
+The plugin binaries are available at Gradle [plugin portal](https://plugins.gradle.org/plugin/io.jmix.cloud).
 
 For more information see:
 

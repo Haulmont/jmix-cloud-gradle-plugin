@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Haulmont.
+ * Copyright 2021 Haulmont.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,16 +31,8 @@ repositories {
 dependencies {
     implementation localGroovy()
 
-    implementation 'org.springframework.boot:spring-boot-gradle-plugin:2.4.4'
-
-    implementation('org.dom4j:dom4j:2.1.3'){
-        exclude group: 'xpp3', module: 'xpp3'
-        exclude group: 'pull-parser', module: 'pull-parser'
-    }
-    implementation 'org.javassist:javassist:3.24.1-GA'
     implementation 'commons-io:commons-io:2.6'
     implementation 'org.apache.commons:commons-lang3:3.9'
-    implementation 'com.google.guava:guava:27.1-jre'
 
     implementation platform('software.amazon.awssdk:bom:2.15.15')
     implementation 'software.amazon.awssdk:ec2'
@@ -67,8 +59,8 @@ task sourcesJar(type: Jar) {
 gradlePlugin {
     plugins {
         jmixCloudPlugin {
-            id = 'io.jmix'
-            implementationClass = 'io.jmix.gradle.JmixCloudPlugin'
+            id = 'io.jmix.cloud'
+            implementationClass = 'io.jmix.cloud.gradle.JmixCloudPlugin'
         }
     }
 }

@@ -18,6 +18,7 @@ package io.jmix.cloud.gradle.tasks
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.jmix.cloud.gradle.CloudClient
+import io.jmix.cloud.gradle.CloudClientFactory
 import io.jmix.cloud.gradle.InstanceState
 import io.jmix.cloud.gradle.utils.DockerUtils
 import io.jmix.cloud.gradle.ssh.SshSession

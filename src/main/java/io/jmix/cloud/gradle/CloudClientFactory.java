@@ -16,7 +16,6 @@
 
 package io.jmix.cloud.gradle;
 
-import com.google.common.collect.ImmutableMap;
 import io.jmix.cloud.gradle.utils.ReflectionUtils;
 import io.jmix.cloud.gradle.clients.AwsCloudClient;
 import org.gradle.api.Project;
@@ -29,14 +28,18 @@ import javax.inject.Named;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class CloudClientFactory {
 
-    private static final Map<String, Class<? extends CloudClient>> PROVIDER_CLIENTS =
-            ImmutableMap.<String, Class<? extends CloudClient>>builder()
-                    .put("aws", AwsCloudClient.class)
-                    .build();
+    private static final Map<String, Class<? extends CloudClient>> PROVIDER_CLIENTS = providerClients();
+
+    private static Map<String, Class<? extends CloudClient>> providerClients() {
+        Map<String, Class<? extends CloudClient>> clients = new HashMap<>();
+        clients.put("aws", AwsCloudClient.class);
+        return clients;
+    }
 
     public static CloudClient fromState(InstanceState state, Task task, String outputDir) {
         return create(state.getProvider(), task, state, outputDir);
