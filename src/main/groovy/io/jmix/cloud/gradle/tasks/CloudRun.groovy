@@ -88,7 +88,7 @@ class CloudRun extends DefaultTask {
         String imageArchiveName = "${imageName.replaceAll("[/:]", "-")}.tar.gz"
         File imageArchiveFile = outDir.file(imageArchiveName).asFile
         logger.lifecycle("Saving Docker image to file $imageArchiveName")
-        try (InputStream dockerImageStream = DockerUtils.saveImage(io.jmix.cloud.gradle.docker.DockerUtils.local(), imageName)) {
+        try (InputStream dockerImageStream = DockerUtils.saveImage(DockerUtils.local(), imageName)) {
             gzip(dockerImageStream, imageArchiveFile)
         }
         logger.lifecycle("Successfully saved Docker image ")
