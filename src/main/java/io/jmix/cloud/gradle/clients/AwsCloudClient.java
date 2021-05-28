@@ -16,7 +16,6 @@
 
 package io.jmix.cloud.gradle.clients;
 
-import com.jcraft.jsch.JSchException;
 import io.jmix.cloud.gradle.ssh.SshSession;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gradle.api.logging.Logger;
@@ -104,14 +103,14 @@ public class AwsCloudClient extends AbstractCloudClient {
     }
 
     @Override
-    protected void doCreateResources() throws Exception {
+    protected void doCreateResources() {
         createKeyPair();
         createSecurityGroup(22, 8080);
         createEc2();
         installDocker();
     }
 
-    private void createKeyPair() throws IOException {
+    private void createKeyPair() {
         CreateKeyPairResponse keyPairResponse = ec2Client.createKeyPair(CreateKeyPairRequest.builder()
                 .keyName("jmix-cloud-run-" + RandomStringUtils.randomAlphanumeric(10))
                 .build());
@@ -120,6 +119,8 @@ public class AwsCloudClient extends AbstractCloudClient {
         try (FileWriter fileWriter = new FileWriter(keyFile);
              BufferedWriter writer = new BufferedWriter(fileWriter)) {
             writer.write(keyPairResponse.keyMaterial());
+        } catch (IOException e) {
+            throw new RuntimeException("Error saving key pair to file " + keyFile.getPath(), e);
         }
         state.setKeyFile(keyFile.getPath());
 
@@ -250,7 +251,7 @@ public class AwsCloudClient extends AbstractCloudClient {
         return image;
     }
 
-    private void installDocker() throws IOException, JSchException {
+    private void installDocker() {
         try (SshSession ssh = ssh()) {
             logger.lifecycle("Installing docker to EC2 Instance");
             ssh.execute("sudo amazon-linux-extras install docker");
@@ -266,7 +267,7 @@ public class AwsCloudClient extends AbstractCloudClient {
     }
 
     @Override
-    public void destroyResources() throws Exception {
+    public void destroyResources() {
         deleteSpotRequest();
         terminateEc2();
         deleteSecurityGroup();
@@ -307,7 +308,7 @@ public class AwsCloudClient extends AbstractCloudClient {
         }
     }
 
-    private void deleteKeyPair() throws IOException {
+    private void deleteKeyPair(){
         if (keyPairName != null) {
             ec2Client.deleteKeyPair(DeleteKeyPairRequest.builder()
                     .keyName(keyPairName)
@@ -315,6 +316,10 @@ public class AwsCloudClient extends AbstractCloudClient {
             logger.lifecycle("Deleted Key Pair {}", keyPairName);
             keyPairName = null;
         }
-        Files.deleteIfExists(Paths.get(state.getKeyFile()));
+        try {
+            Files.deleteIfExists(Paths.get(state.getKeyFile()));
+        } catch (IOException e) {
+            throw new RuntimeException("Error deleting key pair file " + state.getKeyFile());
+        }
     }
 }

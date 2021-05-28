@@ -18,7 +18,6 @@ package io.jmix.cloud.gradle.ssh;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.jmix.cloud.gradle.InstanceState;
 
@@ -30,16 +29,32 @@ public class SshSession implements AutoCloseable {
 
     private final Session session;
 
-    public static SshSession forInstance(InstanceState instance) throws JSchException {
-        JSch jsch = new JSch();
-        jsch.addIdentity(instance.getKeyFile());
-        Session session = jsch.getSession(instance.getUsername(), instance.getHost());
-        session.setConfig("StrictHostKeyChecking", "no");
-        return new SshSession(session);
+    public static SshSession forInstance(InstanceState instance) {
+        try {
+            JSch jsch = new JSch();
+            jsch.addIdentity(instance.getKeyFile());
+            Session session = jsch.getSession(instance.getUsername(), instance.getHost());
+            session.setConfig("StrictHostKeyChecking", "no");
+            return new SshSession(session);
+        } catch (Exception e) {
+            throw new SshException("Error creating SSH session for instance " + instance.getHost(), e);
+        }
+
     }
 
     private SshSession(Session session) {
         this.session = session;
+        openSession();
+    }
+
+    private void openSession() {
+        if (!session.isConnected()) {
+            try {
+                session.connect();
+            } catch (Exception e) {
+                throw new SshException("Error establishing connection for SSH session", e);
+            }
+        }
     }
 
     @Override
@@ -49,18 +64,11 @@ public class SshSession implements AutoCloseable {
         }
     }
 
-    public void execute(String command) throws IOException, JSchException {
+    public void execute(String command) {
         execute(command, null, System.out);
     }
 
-    public void execute(String command, InputStream inputStream) throws IOException, JSchException {
-        execute(command, inputStream, System.out);
-    }
-
-    public void execute(String command, InputStream inputStream, OutputStream outputStream) throws JSchException, IOException {
-        if (!session.isConnected()) {
-            session.connect();
-        }
+    public void execute(String command, InputStream inputStream, OutputStream outputStream) {
         ChannelExec channel = null;
         try {
             channel = (ChannelExec) session.openChannel("exec");
@@ -93,6 +101,8 @@ public class SshSession implements AutoCloseable {
                     Thread.currentThread().interrupt();
                 }
             }
+        } catch (Exception e) {
+            throw new SshException("Error executing command \"" + command + "\"", e);
         } finally {
             if (channel != null) {
                 channel.disconnect();
@@ -100,11 +110,7 @@ public class SshSession implements AutoCloseable {
         }
     }
 
-    public void scpUploadFile(File fromFile, String targetPath) throws JSchException, IOException {
-        if (!session.isConnected()) {
-            session.connect();
-        }
-
+    public void scpUploadFile(File fromFile, String targetPath) {
         ChannelExec channel = null;
         try {
             channel = (ChannelExec) session.openChannel("exec");
@@ -116,14 +122,14 @@ public class SshSession implements AutoCloseable {
 
             channel.connect();
 
-            checkAck(in);
+            checkScpAck(in);
 
             // send "C0644 filesize filename", where filename should not include '/'
             String command = "C0644 " + fromFile.length() + " " + fromFile.getName() + "\n";
             out.write(command.getBytes());
             out.flush();
 
-            checkAck(in);
+            checkScpAck(in);
 
             // send a content of a file
             try (FileInputStream fis = new FileInputStream(fromFile)) {
@@ -139,10 +145,12 @@ public class SshSession implements AutoCloseable {
                 out.write(buf, 0, 1);
                 out.flush();
 
-                checkAck(in);
+                checkScpAck(in);
 
                 out.close();
             }
+        } catch (Exception e) {
+            throw new SshException("Error uploading file " + fromFile.getName() + " via SCP", e);
         } finally {
             if (channel != null) {
                 channel.disconnect();
@@ -150,26 +158,22 @@ public class SshSession implements AutoCloseable {
         }
     }
 
-    public static void checkAck(InputStream in) throws IOException {
+    private static void checkScpAck(InputStream in) throws IOException {
         int b = in.read();
-        // b may be 0 for success,
-        //          1 for error,
-        //          2 for fatal error,
-        //         -1
-        if (b == 0) {
+        if (b == 0) { // success
             return;
         }
 
-        if (b == 1 || b == 2) {
+        if (b == 1 || b == 2) { // error
             StringBuilder sb = new StringBuilder();
             int c;
             do {
                 c = in.read();
                 sb.append((char) c);
             } while (c != '\n');
-            throw new RuntimeException(sb.toString());
+            throw new SshException(sb.toString());
         }
 
-        throw new RuntimeException("Failed to receive ACK");
+        throw new SshException("Failed to receive ACK during SCP file transmission");
     }
 }

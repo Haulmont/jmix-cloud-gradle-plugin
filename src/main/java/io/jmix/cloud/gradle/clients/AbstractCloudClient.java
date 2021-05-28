@@ -37,7 +37,7 @@ public abstract class AbstractCloudClient implements CloudClient {
         return state;
     }
 
-    public final void createResources() throws Exception {
+    public final void createResources() {
         doCreateResources();
         state.setEnvironment(environment());
     }
@@ -57,10 +57,10 @@ public abstract class AbstractCloudClient implements CloudClient {
         return environment;
     }
 
-    protected abstract void doCreateResources() throws Exception;
+    protected abstract void doCreateResources();
 
     @Override
-    public SshSession ssh() throws JSchException {
+    public SshSession ssh() {
         return SshSession.forInstance(state);
     }
 }
