@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.jmix.cloud.gradle.utils;
+package io.jmix.cloud.gradle.utils.docker;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.SaveImageCmd;
@@ -40,7 +40,7 @@ public final class DockerUtils {
                 .build();
     }
 
-    public static DockerClient local() {
+    public static DockerClient clientLocal() {
         return client(DefaultDockerClientConfig.createDefaultConfigBuilder().build());
     }
 

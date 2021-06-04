@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.jmix.cloud.gradle.CloudClient
 import io.jmix.cloud.gradle.CloudClientFactory
 import io.jmix.cloud.gradle.InstanceState
-import io.jmix.cloud.gradle.utils.DockerUtils
-import io.jmix.cloud.gradle.ssh.SshSession
+import io.jmix.cloud.gradle.utils.docker.DockerUtils
+import io.jmix.cloud.gradle.utils.ssh.SshSession
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Input
@@ -88,7 +88,7 @@ class CloudRun extends DefaultTask {
         String imageArchiveName = "${imageName.replaceAll("[/:]", "-")}.tar.gz"
         File imageArchiveFile = outDir.file(imageArchiveName).asFile
         logger.lifecycle("Saving Docker image to file $imageArchiveName")
-        try (InputStream dockerImageStream = DockerUtils.saveImage(DockerUtils.local(), imageName)) {
+        try (InputStream dockerImageStream = DockerUtils.saveImage(DockerUtils.clientLocal(), imageName)) {
             gzip(dockerImageStream, imageArchiveFile)
         }
         logger.lifecycle("Successfully saved Docker image ")
