@@ -19,36 +19,103 @@ package io.jmix.cloud.gradle.dsl
 import org.gradle.api.Project
 
 class DockerExtension {
-
     private Project project
+    private String imageName = ""
+    private String tag = "latest"
 
-    /**
-     * Docker image name
-     */
-    String imageName
-
-    /**
-     * Docker image tag
-     */
-    String tag
-
-    private List<DockerRegistry> registries = []
+    List<DockerRegistry> registries = []
 
     DockerExtension(Project project) {
         this.project = project
     }
 
-    void registry(Closure closure) {
-        DockerRegistry registry = new DockerRegistry()
+    String getImageName() {
+        return imageName
+    }
+
+    void setImageName(String imageName) {
+        this.imageName = imageName
+    }
+
+    String getTag() {
+        return tag
+    }
+
+    void setTag(String tag) {
+        this.tag = tag
+    }
+
+    List<DockerRegistry> getRegistries() {
+        return registries
+    }
+
+    void setRegistries(List<DockerRegistry> registries) {
+        this.registries = registries
+    }
+
+    void registry(String address, Closure closure) {
+        DockerRegistry registry = new DockerRegistry(address)
         registries << registry
         project.configure(registry, closure)
     }
 
     class DockerRegistry {
-        String address = ""
-        String username = ""
-        String password = ""
-        String email = ""
+        private String address = ""
+        private String username = ""
+        private String password = ""
+        private String email = ""
+        private String targetName = ""
+
+        DockerRegistry(String address) {
+            this.address = address
+        }
+
+        String getAddress() {
+            return address
+        }
+
+        String getUsername() {
+            return username
+        }
+
+        void setUsername(String username) {
+            this.username = username
+        }
+
+        String getPassword() {
+            return password
+        }
+
+        void setPassword(String password) {
+            this.password = password
+        }
+
+        String getEmail() {
+            return email
+        }
+
+        void setEmail(String email) {
+            this.email = email
+        }
+
+        String getTargetName() {
+            return targetName
+        }
+
+        void setTargetName(String targetName) {
+            this.targetName = targetName
+        }
+
+        @Override
+        public String toString() {
+            return "DockerRegistry{" +
+                    "address='" + address + '\'' +
+                    ", username='" + username + '\'' +
+                    ", password='" + password + '\'' +
+                    ", email='" + email + '\'' +
+                    ", targetName='" + targetName + '\'' +
+                    '}';
+        }
     }
 
 }

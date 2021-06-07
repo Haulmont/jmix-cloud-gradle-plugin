@@ -34,6 +34,7 @@ class JmixCloudPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         project.extensions.create('docker', DockerExtension, project)
+//        project.docker.extensions.create('registries', DockerExtension.DockerRegistry, project)
 
         project.task([type: CloudRun], CLOUD_RUN_TASK)
         project.task([type: CloudClean], CLOUD_CLEAN_TASK)

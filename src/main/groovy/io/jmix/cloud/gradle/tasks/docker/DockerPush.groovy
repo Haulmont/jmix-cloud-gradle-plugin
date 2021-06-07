@@ -17,6 +17,10 @@
 package io.jmix.cloud.gradle.tasks.docker
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.async.ResultCallback
+import com.github.dockerjava.api.command.PushImageCmd
+import com.github.dockerjava.api.model.PushResponseItem
+import com.github.dockerjava.core.command.PushImageResultCallback
 import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
@@ -28,8 +32,12 @@ import org.gradle.api.tasks.options.Option
 
 class DockerPush extends DefaultTask {
 
+    private static final String EXTENSION_DOCKER_NAME = "docker"
+
     private String sourceTag
     private String targetTag
+
+    private DockerExtension extension
 
     DockerPush() {
         setGroup("docker")
@@ -37,6 +45,7 @@ class DockerPush extends DefaultTask {
     }
 
     @Input
+    @Optional
     String getSourceTag() {
         return sourceTag
     }
@@ -59,16 +68,33 @@ class DockerPush extends DefaultTask {
 
     @TaskAction
     push() {
-        String tag = targetTag ?: sourceTag
+        extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
+        String taskTag = targetTag ?: sourceTag
+        String extensionTag = calculateImageName()
+        String tag = extensionTag ?: taskTag
+        String name = extension.getImageName()
+        String et = extension.getTag()
         try (DockerClient client = DockerUtils.clientLocal()) {
-            project.docker.registries.each { registry ->
-                client.pushImageCmd("${registry.address}/${tag}")
-                    .withAuthConfig(client.authConfig()
-                            .withRegistryAddress(registry.address)
-                            .withEmail(registry.email)
-                            .withUsername(registry.username)
-                            .withPassword(registry.password))
+            extension.getRegistries().each { registry ->
+                {
+                    logger.lifecycle("tag: {}", tag)
+                    String t = registry.getTargetName() ?: et
+                    client.pushImageCmd(name).withTag(t)
+                            .withAuthConfig(client.authConfig()
+                                    .withRegistryAddress(registry.getAddress())
+                                    .withEmail(registry.getEmail())
+                                    .withUsername(registry.getUsername())
+                                    .withPassword(registry.getPassword()))
+                            .exec(new ResultCallback.Adapter())
+                            .awaitCompletion()
+                }
             }
         }
+    }
+
+    private String calculateImageName() {
+        String name = extension.getImageName()
+        String tag = extension.getTag()
+        return name.contains(':') ? name : "${name}:${tag}"
     }
 }

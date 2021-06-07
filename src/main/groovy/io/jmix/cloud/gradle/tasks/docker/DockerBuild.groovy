@@ -17,6 +17,7 @@
 package io.jmix.cloud.gradle.tasks.docker
 
 import com.github.dockerjava.api.DockerClient
+import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
@@ -26,10 +27,14 @@ import org.gradle.api.tasks.options.Option
 
 class DockerBuild extends DefaultTask {
 
+    private static final String EXTENSION_DOCKER_NAME = "docker"
+
     private String imageName = null
     private String imageTag = "latest"
     private boolean removeContainers = true
     private boolean forceRemoveContainers = false
+
+    private DockerExtension extension
 
     DockerBuild() {
         setGroup("docker")
@@ -59,7 +64,6 @@ class DockerBuild extends DefaultTask {
     }
 
     @Input
-    @Optional
     boolean isRemoveContainers() {
         return removeContainers
     }
@@ -70,7 +74,6 @@ class DockerBuild extends DefaultTask {
     }
 
     @Input
-    @Optional
     boolean isForceRemoveContainers() {
         return forceRemoveContainers
     }
@@ -82,11 +85,13 @@ class DockerBuild extends DefaultTask {
 
     @TaskAction
     void buildImage() {
-        String tag = calculateImageName()
+        extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
+        String tag = calculateImageName(extension.getTag())
         logger.lifecycle("Building Docker image {}", tag)
         try (DockerClient client = DockerUtils.clientLocal()) {
             String imageId = client.buildImageCmd(project.file("Dockerfile"))
-                    .withTags([tag] as Set<String>)
+//                    .withTags([tag] as Set<String>)
+                    .withTags(getAllTags())
                     .withRemove(removeContainers)
                     .withForcerm(forceRemoveContainers)
                     .start()
@@ -95,8 +100,21 @@ class DockerBuild extends DefaultTask {
         }
     }
 
-    private String calculateImageName() {
-        def name = imageName ?: project.name
-        return name.contains(':') ? name : "${name}:${imageTag}"
+    private Set<String> getAllTags() {
+        Set<String> tags = new HashSet<>()
+        tags << calculateImageName(extension.getTag())
+        String name  = extension.getImageName()
+        extension.getRegistries().each { registry ->
+            tags << "${name}:${registry.getTargetName()}"
+        }
+        return tags
+    }
+
+    private String calculateImageName(String inputTag) {
+        String nameSource = extension.getImageName() ?: imageName
+        String name = nameSource ?: project.name
+//        String tag = extension.getTag() ?: imageTag
+        String tag = inputTag ?: imageTag
+        return name.contains(':') ? name : "${name}:${tag}"
     }
 }
