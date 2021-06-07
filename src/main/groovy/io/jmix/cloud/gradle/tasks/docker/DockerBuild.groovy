@@ -21,7 +21,6 @@ import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
@@ -29,38 +28,14 @@ class DockerBuild extends DefaultTask {
 
     private static final String EXTENSION_DOCKER_NAME = "docker"
 
-    private String imageName = null
-    private String imageTag = "latest"
     private boolean removeContainers = true
     private boolean forceRemoveContainers = false
 
-    private DockerExtension extension
+    protected DockerExtension extension
 
     DockerBuild() {
         setGroup("docker")
         setDescription("Builds Docker image")
-    }
-
-    @Input
-    @Optional
-    String getImageName() {
-        return this.imageName
-    }
-
-    @Option(option = "imageName", description = "Docker image name")
-    void setImageName(String imageName) {
-        this.imageName = imageName
-    }
-
-    @Input
-    @Optional
-    String getImageTag() {
-        return this.imageTag
-    }
-
-    @Option(option = "imageTag", description = "Docker image tag")
-    void setImageTag(String imageTag) {
-        this.imageTag = imageTag
     }
 
     @Input
@@ -86,35 +61,32 @@ class DockerBuild extends DefaultTask {
     @TaskAction
     void buildImage() {
         extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
-        String tag = calculateImageName(extension.getTag())
-        logger.lifecycle("Building Docker image {}", tag)
+        logger.lifecycle("Building Docker image {}", name)
         try (DockerClient client = DockerUtils.clientLocal()) {
             String imageId = client.buildImageCmd(project.file("Dockerfile"))
-//                    .withTags([tag] as Set<String>)
                     .withTags(getAllTags())
                     .withRemove(removeContainers)
                     .withForcerm(forceRemoveContainers)
                     .start()
                     .awaitImageId()
-            logger.lifecycle("Build Docker image {} (id = {})", tag, imageId)
+            logger.lifecycle("Build Docker image {} (id = {})", name, imageId)
         }
     }
 
     private Set<String> getAllTags() {
         Set<String> tags = new HashSet<>()
-        tags << calculateImageName(extension.getTag())
-        String name  = extension.getImageName()
-        extension.getRegistries().each { registry ->
-            tags << "${name}:${registry.getTargetName()}"
+        tags << calculateFullImageName(extension.getTag())
+        extension.getRegistries().forEach(registry -> {
+            if (registry.getTargetName())
+                tags << calculateFullImageName(registry.getTargetName())
         }
+        )
         return tags
     }
 
-    private String calculateImageName(String inputTag) {
-        String nameSource = extension.getImageName() ?: imageName
-        String name = nameSource ?: project.name
-//        String tag = extension.getTag() ?: imageTag
-        String tag = inputTag ?: imageTag
+    protected String calculateFullImageName(String tag) {
+        String name = extension.getImageName() ?: project.name
         return name.contains(':') ? name : "${name}:${tag}"
     }
+
 }

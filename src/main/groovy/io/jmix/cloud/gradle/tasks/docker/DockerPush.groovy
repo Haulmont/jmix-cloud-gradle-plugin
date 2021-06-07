@@ -34,9 +34,6 @@ class DockerPush extends DefaultTask {
 
     private static final String EXTENSION_DOCKER_NAME = "docker"
 
-    private String sourceTag
-    private String targetTag
-
     private DockerExtension extension
 
     DockerPush() {
@@ -44,57 +41,27 @@ class DockerPush extends DefaultTask {
         setDescription("Pushes Docker image to remote repositories")
     }
 
-    @Input
-    @Optional
-    String getSourceTag() {
-        return sourceTag
-    }
-
-    @Option(option = "sourceTag", description = "Docker image name to push")
-    void setSourceTag(String sourceTag) {
-        this.sourceTag = sourceTag
-    }
-
-    @Input
-    @Optional
-    String getTargetTag() {
-        return targetTag
-    }
-
-    @Option(option = "targetTag", description = "Docker image name in registries")
-    void setTargetTag(String targetTag) {
-        this.targetTag = targetTag
-    }
-
     @TaskAction
     push() {
         extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
-        String taskTag = targetTag ?: sourceTag
-        String extensionTag = calculateImageName()
-        String tag = extensionTag ?: taskTag
         String name = extension.getImageName()
-        String et = extension.getTag()
+        String tag = extension.getTag()
         try (DockerClient client = DockerUtils.clientLocal()) {
-            extension.getRegistries().each { registry ->
-                {
-                    logger.lifecycle("tag: {}", tag)
-                    String t = registry.getTargetName() ?: et
-                    client.pushImageCmd(name).withTag(t)
-                            .withAuthConfig(client.authConfig()
-                                    .withRegistryAddress(registry.getAddress())
-                                    .withEmail(registry.getEmail())
-                                    .withUsername(registry.getUsername())
-                                    .withPassword(registry.getPassword()))
-                            .exec(new ResultCallback.Adapter())
-                            .awaitCompletion()
-                }
+            extension.getRegistries().forEach(registry -> {
+                String registryTag = registry.getTargetName() ?: tag
+                client.pushImageCmd(name)
+                        .withTag(registryTag)
+                        .withAuthConfig(client.authConfig()
+                                .withRegistryAddress(registry.getAddress())
+                                .withEmail(registry.getEmail())
+                                .withUsername(registry.getUsername())
+                                .withPassword(registry.getPassword()))
+                        .exec(new ResultCallback.Adapter())
+                        .awaitCompletion()
+                logger.lifecycle("Pushed docker image with tag: {}:{}", name, tag)
             }
+            )
         }
     }
 
-    private String calculateImageName() {
-        String name = extension.getImageName()
-        String tag = extension.getTag()
-        return name.contains(':') ? name : "${name}:${tag}"
-    }
 }
