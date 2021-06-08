@@ -16,6 +16,7 @@
 
 package io.jmix.cloud.gradle.dsl
 
+import com.github.dockerjava.api.model.AuthConfig
 import org.gradle.api.Project
 
 class DockerExtension {
@@ -75,7 +76,7 @@ class DockerExtension {
         }
 
         String getAddress() {
-            return address
+            return address ?: AuthConfig.DEFAULT_SERVER_ADDRESS
         }
 
         String getUsername() {
@@ -112,8 +113,7 @@ class DockerExtension {
 
         String getFullImageName() {
             String name = targetName ?: getImageName();
-            String nameTag = "${name}:${getTag()}"
-            return address.isEmpty() ? nameTag : "${address}/${nameTag}"
+            return "${getAddress()}/${name}:${getTag()}"
         }
 
         @Override
