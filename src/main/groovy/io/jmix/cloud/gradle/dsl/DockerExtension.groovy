@@ -53,6 +53,11 @@ class DockerExtension {
         this.registries = registries
     }
 
+    String calculateFullImageName(String name, String address) {
+        String nameTag = name.contains(':') ? name : "${name}:${tag}"
+        return address.isEmpty() ? nameTag : "${address}/${nameTag}"
+    }
+
     void registry(String address, Closure closure) {
         DockerRegistry registry = new DockerRegistry(address)
         registries << registry

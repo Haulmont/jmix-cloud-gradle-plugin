@@ -33,7 +33,7 @@ import org.gradle.api.tasks.options.Option
 
 class DockerPush extends DefaultTask {
 
-    private DockerExtension extension
+    protected DockerExtension extension
 
     DockerPush() {
         setGroup("docker")
@@ -44,12 +44,10 @@ class DockerPush extends DefaultTask {
     push() {
         extension = project.extensions.findByName(JmixCloudPlugin.EXTENSION_DOCKER_NAME) as DockerExtension
         String name = extension.getImageName()
-        String tag = extension.getTag()
         try (DockerClient client = DockerUtils.clientLocal()) {
             extension.getRegistries().forEach(registry -> {
-                String registryName = registry.getTargetName() ?: name
-                client.pushImageCmd(registryName)
-                        .withTag(tag)
+                String fullName = extension.calculateFullImageName(registry.getTargetName() ?: name, registry.getAddress())
+                client.pushImageCmd(fullName)
                         .withAuthConfig(client.authConfig()
                                 .withRegistryAddress(registry.getAddress())
                                 .withEmail(registry.getEmail())
@@ -57,7 +55,7 @@ class DockerPush extends DefaultTask {
                                 .withPassword(registry.getPassword()))
                         .exec(new ResultCallback.Adapter())
                         .awaitCompletion()
-                logger.lifecycle("Pushed docker image with name: {}:{}", name, tag)
+                logger.lifecycle("Pushed docker image with name: {}", fullName)
             }
             )
         }
