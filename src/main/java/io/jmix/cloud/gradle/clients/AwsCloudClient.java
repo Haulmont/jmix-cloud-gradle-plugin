@@ -16,7 +16,7 @@
 
 package io.jmix.cloud.gradle.clients;
 
-import io.jmix.cloud.gradle.ssh.SshSession;
+import io.jmix.cloud.gradle.utils.ssh.SshSession;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gradle.api.logging.Logger;
 import software.amazon.awssdk.auth.credentials.*;

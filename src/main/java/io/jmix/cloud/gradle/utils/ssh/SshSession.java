@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.jmix.cloud.gradle.ssh;
+package io.jmix.cloud.gradle.utils.ssh;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;

@@ -1,6 +1,6 @@
 package io.jmix.cloud.gradle;
 
-import io.jmix.cloud.gradle.ssh.SshSession;
+import io.jmix.cloud.gradle.utils.ssh.SshSession;
 
 public interface CloudClient {
     void createResources();

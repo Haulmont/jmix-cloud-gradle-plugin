@@ -16,8 +16,11 @@
 
 package io.jmix.cloud.gradle
 
+import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.tasks.CloudClean
 import io.jmix.cloud.gradle.tasks.CloudRun
+import io.jmix.cloud.gradle.tasks.docker.DockerBuild
+import io.jmix.cloud.gradle.tasks.docker.DockerPush
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -25,11 +28,19 @@ class JmixCloudPlugin implements Plugin<Project> {
 
     private static final String CLOUD_RUN_TASK = 'cloudRun'
     private static final String CLOUD_CLEAN_TASK = 'cloudClean'
+    private static final String DOCKER_BUILD = 'dockerBuild'
+    private static final String DOCKER_PUSH = 'dockerPush'
+
+    public static final String EXTENSION_DOCKER_NAME = 'docker'
 
     @Override
     void apply(Project project) {
+        project.extensions.create(EXTENSION_DOCKER_NAME, DockerExtension, project)
+
         project.task([type: CloudRun], CLOUD_RUN_TASK)
         project.task([type: CloudClean], CLOUD_CLEAN_TASK)
+        project.task([type: DockerBuild], DOCKER_BUILD)
+        project.task([type: DockerPush], DOCKER_PUSH)
 
         project.afterEvaluate {
             project.tasks.findByName('clean').dependsOn(CLOUD_CLEAN_TASK)

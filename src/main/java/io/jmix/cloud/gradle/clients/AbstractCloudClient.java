@@ -16,10 +16,9 @@
 
 package io.jmix.cloud.gradle.clients;
 
-import com.jcraft.jsch.JSchException;
 import io.jmix.cloud.gradle.CloudClient;
 import io.jmix.cloud.gradle.InstanceState;
-import io.jmix.cloud.gradle.ssh.SshSession;
+import io.jmix.cloud.gradle.utils.ssh.SshSession;
 import io.jmix.cloud.gradle.utils.ReflectionUtils;
 
 import javax.inject.Inject;
