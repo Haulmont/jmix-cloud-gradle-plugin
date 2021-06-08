@@ -76,10 +76,10 @@ class DockerBuild extends DefaultTask {
         Set<String> tags = new HashSet<>()
         extension.getRegistries().forEach(registry -> {
             if (registry.getTargetName()) {
-                tags << extension.calculateFullImageName(registry.getTargetName(), registry.getAddress())
+                tags << registry.getFullImageName()
             }
         })
-        tags << extension.calculateFullImageName(extension.getImageName(), "")
+        tags << extension.getFullImageName()
         return tags
     }
 

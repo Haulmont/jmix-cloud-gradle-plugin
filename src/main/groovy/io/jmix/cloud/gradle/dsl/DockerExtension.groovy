@@ -53,9 +53,8 @@ class DockerExtension {
         this.registries = registries
     }
 
-    String calculateFullImageName(String name, String address) {
-        String nameTag = name.contains(':') ? name : "${name}:${tag}"
-        return address.isEmpty() ? nameTag : "${address}/${nameTag}"
+    String getFullImageName() {
+        return "${getImageName()}:${tag}"
     }
 
     void registry(String address, Closure closure) {
@@ -111,8 +110,14 @@ class DockerExtension {
             this.targetName = targetName
         }
 
+        String getFullImageName() {
+            String name = targetName ?: getImageName();
+            String nameTag = "${name}:${getTag()}"
+            return address.isEmpty() ? nameTag : "${address}/${nameTag}"
+        }
+
         @Override
-        public String toString() {
+        String toString() {
             return "DockerRegistry{" +
                     "address='" + address + '\'' +
                     ", username='" + username + '\'' +

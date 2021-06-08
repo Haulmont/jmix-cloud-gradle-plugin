@@ -43,10 +43,9 @@ class DockerPush extends DefaultTask {
     @TaskAction
     push() {
         extension = project.extensions.findByName(JmixCloudPlugin.EXTENSION_DOCKER_NAME) as DockerExtension
-        String name = extension.getImageName()
         try (DockerClient client = DockerUtils.clientLocal()) {
             extension.getRegistries().forEach(registry -> {
-                String fullName = extension.calculateFullImageName(registry.getTargetName() ?: name, registry.getAddress())
+                String fullName = registry.getFullImageName()
                 client.pushImageCmd(fullName)
                         .withAuthConfig(client.authConfig()
                                 .withRegistryAddress(registry.getAddress())
