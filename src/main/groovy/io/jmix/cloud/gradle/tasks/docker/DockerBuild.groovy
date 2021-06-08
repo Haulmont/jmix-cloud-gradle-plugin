@@ -78,7 +78,7 @@ class DockerBuild extends DefaultTask {
             if (registry.getTargetName())
                 tags << calculateFullImageName(registry.getTargetName())
         })
-        if (tags.isEmpty()) tags << calculateFullImageName(extension.getImageName())
+        tags << calculateFullImageName(extension.getImageName())
         return tags
     }
 
