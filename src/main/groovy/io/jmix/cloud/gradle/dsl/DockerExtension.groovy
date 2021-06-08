@@ -20,7 +20,7 @@ import org.gradle.api.Project
 
 class DockerExtension {
     private Project project
-    private String imageName = ""
+    private String imageName = null
     private String tag = "latest"
 
     List<DockerRegistry> registries = []
@@ -30,7 +30,7 @@ class DockerExtension {
     }
 
     String getImageName() {
-        return imageName
+        return imageName ?: project.name
     }
 
     void setImageName(String imageName) {

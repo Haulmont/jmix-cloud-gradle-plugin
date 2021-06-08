@@ -31,10 +31,11 @@ class JmixCloudPlugin implements Plugin<Project> {
     private static final String DOCKER_BUILD = 'dockerBuild'
     private static final String DOCKER_PUSH = 'dockerPush'
 
+    public static final String EXTENSION_DOCKER_NAME = 'docker'
+
     @Override
     void apply(Project project) {
-        project.extensions.create('docker', DockerExtension, project)
-//        project.docker.extensions.create('registries', DockerExtension.DockerRegistry, project)
+        project.extensions.create(EXTENSION_DOCKER_NAME, DockerExtension, project)
 
         project.task([type: CloudRun], CLOUD_RUN_TASK)
         project.task([type: CloudClean], CLOUD_CLEAN_TASK)

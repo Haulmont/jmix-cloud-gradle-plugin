@@ -17,6 +17,7 @@
 package io.jmix.cloud.gradle.tasks.docker
 
 import com.github.dockerjava.api.DockerClient
+import io.jmix.cloud.gradle.JmixCloudPlugin
 import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
@@ -25,8 +26,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
 class DockerBuild extends DefaultTask {
-
-    private static final String EXTENSION_DOCKER_NAME = "docker"
 
     private boolean removeContainers = true
     private boolean forceRemoveContainers = false
@@ -60,7 +59,7 @@ class DockerBuild extends DefaultTask {
 
     @TaskAction
     void buildImage() {
-        extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
+        extension = project.extensions.findByName(JmixCloudPlugin.EXTENSION_DOCKER_NAME) as DockerExtension
         logger.lifecycle("Building Docker image {}", name)
         try (DockerClient client = DockerUtils.clientLocal()) {
             String imageId = client.buildImageCmd(project.file("Dockerfile"))
@@ -75,18 +74,16 @@ class DockerBuild extends DefaultTask {
 
     private Set<String> getAllTags() {
         Set<String> tags = new HashSet<>()
-        tags << calculateFullImageName(extension.getTag())
         extension.getRegistries().forEach(registry -> {
             if (registry.getTargetName())
                 tags << calculateFullImageName(registry.getTargetName())
-        }
-        )
+        })
+        if (tags.isEmpty()) tags << calculateFullImageName(extension.getImageName())
         return tags
     }
 
-    protected String calculateFullImageName(String tag) {
-        String name = extension.getImageName() ?: project.name
-        return name.contains(':') ? name : "${name}:${tag}"
+    protected String calculateFullImageName(String name) {
+        return name.contains(':') ? name : "${name}:${extension.getTag()}"
     }
 
 }

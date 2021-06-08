@@ -21,6 +21,7 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.command.PushImageCmd
 import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.core.command.PushImageResultCallback
+import io.jmix.cloud.gradle.JmixCloudPlugin
 import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
@@ -32,8 +33,6 @@ import org.gradle.api.tasks.options.Option
 
 class DockerPush extends DefaultTask {
 
-    private static final String EXTENSION_DOCKER_NAME = "docker"
-
     private DockerExtension extension
 
     DockerPush() {
@@ -43,14 +42,14 @@ class DockerPush extends DefaultTask {
 
     @TaskAction
     push() {
-        extension = project.extensions.findByName(EXTENSION_DOCKER_NAME) as DockerExtension
+        extension = project.extensions.findByName(JmixCloudPlugin.EXTENSION_DOCKER_NAME) as DockerExtension
         String name = extension.getImageName()
         String tag = extension.getTag()
         try (DockerClient client = DockerUtils.clientLocal()) {
             extension.getRegistries().forEach(registry -> {
-                String registryTag = registry.getTargetName() ?: tag
-                client.pushImageCmd(name)
-                        .withTag(registryTag)
+                String registryName = registry.getTargetName() ?: name
+                client.pushImageCmd(registryName)
+                        .withTag(tag)
                         .withAuthConfig(client.authConfig()
                                 .withRegistryAddress(registry.getAddress())
                                 .withEmail(registry.getEmail())
@@ -58,7 +57,7 @@ class DockerPush extends DefaultTask {
                                 .withPassword(registry.getPassword()))
                         .exec(new ResultCallback.Adapter())
                         .awaitCompletion()
-                logger.lifecycle("Pushed docker image with tag: {}:{}", name, tag)
+                logger.lifecycle("Pushed docker image with name: {}:{}", name, tag)
             }
             )
         }
