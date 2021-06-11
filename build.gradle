@@ -63,7 +63,7 @@ pluginBundle {
     tags = ['jmix', 'spring', 'cloud']
 
     plugins {
-        jmixPlugin {
+        jmixCloudPlugin {
             displayName = 'Jmix Framework Cloud Gradle Plugin'
         }
     }
