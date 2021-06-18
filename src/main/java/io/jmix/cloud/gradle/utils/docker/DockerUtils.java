@@ -46,7 +46,7 @@ public final class DockerUtils {
 
     public static DockerClient clientLocal() {
         if (isWindows()) {
-            String dockerHost = DockerHostDeterminantForWindows.defineDockerHost();
+            String dockerHost = WindowsDockerHostResolver.resolveDockerHost();
             return client(DefaultDockerClientConfig.createDefaultConfigBuilder().withDockerHost(dockerHost).build());
         }
         return client(DefaultDockerClientConfig.createDefaultConfigBuilder().build());
