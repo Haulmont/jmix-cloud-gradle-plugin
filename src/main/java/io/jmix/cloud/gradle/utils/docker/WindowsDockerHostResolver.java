@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 
 public final class WindowsDockerHostResolver {
@@ -40,11 +39,14 @@ public final class WindowsDockerHostResolver {
     }
 
     private static String resolveDockerHost(Map<String, String> env, Properties systemProperties) {
-        return Optional.ofNullable(getDockerHostFromSettingsFromSystemProperties(systemProperties))
-                .or(() -> Optional.ofNullable(getDockerHostFromEnvironmentVariables(env)))
-                .or(() -> Optional.ofNullable(getDockerHostFromSettingsFromUserHome(systemProperties)))
-                .or(() -> Optional.ofNullable(getDockerHostFromIncludedDockerProperties()))
-                .or(() -> Optional.of(WINDOWS_DEFAULT_DOCKER_HOST)).get();
+        String dockerHost = getDockerHostFromSettingsFromSystemProperties(systemProperties);
+
+        if(dockerHost == null) dockerHost = getDockerHostFromEnvironmentVariables(env);
+        if(dockerHost == null) dockerHost = getDockerHostFromSettingsFromUserHome(systemProperties);
+        if(dockerHost == null) dockerHost = getDockerHostFromIncludedDockerProperties();
+        if(dockerHost == null) dockerHost = WINDOWS_DEFAULT_DOCKER_HOST;
+
+        return dockerHost;
     }
 
     private static String getDockerHostFromIncludedDockerProperties() {
