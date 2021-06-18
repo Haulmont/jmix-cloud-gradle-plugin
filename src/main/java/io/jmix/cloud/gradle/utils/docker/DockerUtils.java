@@ -28,11 +28,15 @@ import java.io.InputStream;
 
 public final class DockerUtils {
 
+    private static final String OS_NAME_PROPERTY = "os.name";
+    private static final String OS_WINDOWS_NAME = "Windows";
+    private static final int DOCKER_CLIENT_MAX_CONNECTIONS = 10;
+
     public static DockerClient client(DockerClientConfig config) {
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(config.getDockerHost())
                 .sslConfig(config.getSSLConfig())
-                .maxConnections(10)
+                .maxConnections(DOCKER_CLIENT_MAX_CONNECTIONS)
                 .build();
 
         return DockerClientBuilder.getInstance(config)
@@ -41,6 +45,10 @@ public final class DockerUtils {
     }
 
     public static DockerClient clientLocal() {
+        if (isWindows()) {
+            String dockerHost = WindowsDockerHostResolver.resolveDockerHost();
+            return client(DefaultDockerClientConfig.createDefaultConfigBuilder().withDockerHost(dockerHost).build());
+        }
         return client(DefaultDockerClientConfig.createDefaultConfigBuilder().build());
     }
 
@@ -59,6 +67,10 @@ public final class DockerUtils {
         }
 
         return saveImageCmd.exec();
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty(OS_NAME_PROPERTY).startsWith(OS_WINDOWS_NAME);
     }
 
 }
