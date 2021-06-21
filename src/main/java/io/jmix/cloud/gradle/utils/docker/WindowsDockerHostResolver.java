@@ -26,7 +26,7 @@ import java.util.Properties;
 public final class WindowsDockerHostResolver {
 
     private static final String DOCKER_HOST = "DOCKER_HOST";
-    private static final String WINDOWS_DEFAULT_DOCKER_HOST = "tcp://localhost:2375";
+    private static final String WINDOWS_DEFAULT_DOCKER_HOST = "npipe:////./pipe/docker_engine";
     private static final String DOCKER_JAVA_PROPERTIES = "docker-java.properties";
     private static final String USER_HOME = "user.home";
 
