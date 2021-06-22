@@ -18,18 +18,11 @@ package io.jmix.cloud.gradle.tasks.docker
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.async.ResultCallback
-import com.github.dockerjava.api.command.PushImageCmd
-import com.github.dockerjava.api.model.PushResponseItem
-import com.github.dockerjava.core.command.PushImageResultCallback
 import io.jmix.cloud.gradle.JmixCloudPlugin
 import io.jmix.cloud.gradle.dsl.DockerExtension
 import io.jmix.cloud.gradle.utils.docker.DockerUtils
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.options.Option
 
 class DockerPush extends DefaultTask {
 

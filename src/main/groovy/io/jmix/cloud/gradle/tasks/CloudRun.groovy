@@ -84,7 +84,7 @@ class CloudRun extends DefaultTask {
             logger.lifecycle("Using existing instance $state.host")
         }
 
-        String imageName = project.tasks.bootBuildImage.imageName
+        String imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
         String imageArchiveName = "${imageName.replaceAll("[/:]", "-")}.tar.gz"
         File imageArchiveFile = outDir.file(imageArchiveName).asFile
         logger.lifecycle("Saving Docker image to file $imageArchiveName")
