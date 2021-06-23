@@ -99,17 +99,16 @@ class CloudRun extends DefaultTask {
 
         runDockerCompose(state, imageArchiveFile)
 
-        boolean isReachable = ping("http", state.host, "8080")
+        boolean isReachable = ping("http://$state.host:8080")
 
         if (isReachable) {
             logger.quiet("Application is running on http://$state.host:8080")
         } else {
-            logger.error("Application is running on http://$state.host:8080 , but this resource can't be reachable.")
+            logger.error("Application is started on http://$state.host:8080, but it cannot be reached")
         }
     }
 
-    private boolean ping(String protocol, String hostname, String port) {
-        String host = "$protocol://$hostname:$port"
+    private boolean ping(String host) {
         logger.debug("ping called for host: $host")
         try {
             HttpURLConnection httpUrlConnection = (HttpURLConnection) new URL(host).openConnection()
