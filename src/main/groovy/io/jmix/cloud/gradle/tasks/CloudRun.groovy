@@ -37,7 +37,6 @@ class CloudRun extends DefaultTask {
     private static final int PING_WAITING_INTERVAL = 10000;
 
     private ObjectMapper objectMapper
-
     private String provider = 'aws'
 
     @Input
@@ -56,6 +55,10 @@ class CloudRun extends DefaultTask {
         setDescription("Runs Jmix project in cloud environment")
 
         objectMapper = new ObjectMapper()
+
+        project.afterEvaluate {
+            project.tasks.bootBuildImage.imageName = project.tasks.bootBuildImage.imageName ?: project.name
+        }
     }
 
     @TaskAction
@@ -88,7 +91,7 @@ class CloudRun extends DefaultTask {
             logger.lifecycle("Using existing instance $state.host")
         }
 
-        String imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
+        String imageName = project.tasks.bootBuildImage.imageName ?: project.name
         String imageArchiveName = "${imageName.replaceAll("[/:]", "-")}.tar.gz"
         File imageArchiveFile = outDir.file(imageArchiveName).asFile
         logger.lifecycle("Saving Docker image to file $imageArchiveName")
@@ -131,7 +134,7 @@ class CloudRun extends DefaultTask {
 
     private void runDockerCompose(InstanceState instance, File imageFile) {
         try (SshSession ssh = SshSession.forInstance(instance)) {
-            String imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
+            String imageName = project.tasks.bootBuildImage.imageName ?: project.name
 
             ssh.execute("mkdir app")
 
@@ -145,7 +148,8 @@ class CloudRun extends DefaultTask {
 
             logger.lifecycle("Loading image $imageName from file $imageFile.name")
             ssh.execute("cd app && gunzip -c $imageFile.name | docker load")
-            logger.lifecycle("Successfully loaded image $imageName")
+            ssh.execute("docker tag $imageName ${project.name}")
+            logger.lifecycle("Successfully loaded Docker image")
 
             logger.lifecycle("Starting application")
             ssh.execute("cd app && docker-compose up -d")
