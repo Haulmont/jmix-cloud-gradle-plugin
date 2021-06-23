@@ -116,15 +116,13 @@ class CloudRun extends DefaultTask {
             httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
             httpUrlConnection.setReadTimeout(PING_TIMEOUT)
             httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
-            int responseCode = httpUrlConnection.getResponseCode()
-            int countOfPing = 30
-            while (countOfPing != 0 && responseCode != 200 || responseCode != 302) {
-                Thread.sleep(PING_WAITING_INTERVAL)
-                responseCode = httpUrlConnection.getResponseCode()
-                countOfPing--
-            }
-            if (responseCode == 200 || responseCode == 302) {
-                return true
+            int retriesLeft = 30
+            while (retriesLeft-- > 0) {
+                int code = httpUrlConnection.getResponseCode();
+                if (code == 200 || code == 302) {
+                    return true;
+                }
+                Thread.sleep(PING_WAITING_INTERVAL);
             }
         } catch (IOException | InterruptedException e) {
             logger.error("Host $host is unrecheable. Exception: $e")
