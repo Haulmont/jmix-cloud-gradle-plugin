@@ -111,21 +111,21 @@ class CloudRun extends DefaultTask {
 
     private boolean ping(String path) {
         logger.debug("ping called for path: $path")
-        try {
-            HttpURLConnection httpUrlConnection = (HttpURLConnection) new URL(path).openConnection()
-            httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
-            httpUrlConnection.setReadTimeout(PING_TIMEOUT)
-            httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
-            int retriesLeft = 30
-            while (retriesLeft-- > 0) {
+        int retriesLeft = 30
+        while (retriesLeft-- > 0) {
+            try {
+                HttpURLConnection httpUrlConnection = (HttpURLConnection) new URL(path).openConnection()
+                httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
+                httpUrlConnection.setReadTimeout(PING_TIMEOUT)
+                httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
                 int code = httpUrlConnection.getResponseCode()
                 if (code == 200 || code == 302) {
                     return true
                 }
-                Thread.sleep(PING_WAITING_INTERVAL)
+            } catch (IOException | InterruptedException e) {
+                logger.debug("Host with path $path is unrecheable")
             }
-        } catch (IOException | InterruptedException e) {
-            logger.error("Host with path $path is unrecheable. Exception: $e")
+            Thread.sleep(PING_WAITING_INTERVAL)
         }
         return false
     }
