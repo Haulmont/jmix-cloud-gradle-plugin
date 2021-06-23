@@ -56,7 +56,6 @@ class CloudRun extends DefaultTask {
         setDescription("Runs Jmix project in cloud environment")
 
         objectMapper = new ObjectMapper()
-        project.tasks.bootBuildImage.imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
     }
 
     @TaskAction
