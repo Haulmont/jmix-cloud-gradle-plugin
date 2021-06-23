@@ -99,32 +99,37 @@ class CloudRun extends DefaultTask {
 
         runDockerCompose(state, imageArchiveFile)
 
-        ping("http", state.host, "8080")
+        boolean isReachable = ping("http", state.host, "8080")
 
-        logger.quiet("Application is running on http://$state.host:8080")
+        if (isReachable) {
+            logger.quiet("Application is running on http://$state.host:8080")
+        } else {
+            logger.error("Application is running on http://$state.host:8080 , but this resource can't be reachable.")
+        }
     }
 
-    private void ping(String protocol, String hostname, String port) {
+    private boolean ping(String protocol, String hostname, String port) {
         String host = "$protocol://$hostname:$port"
         logger.debug("ping called for host: $host")
         try {
             HttpURLConnection httpUrlConnection = (HttpURLConnection) new URL(host).openConnection()
             httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
-            httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
+            httpUrlConnection.setReadTimeout(PING_TIMEOUT)
             httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
             int responseCode = httpUrlConnection.getResponseCode()
             int countOfPing = 30
-            while (countOfPing != 0 && responseCode == 200 || responseCode == 302) {
+            while (countOfPing != 0 && responseCode != 200 || responseCode != 302) {
+                Thread.sleep(PING_WAITING_INTERVAL)
                 responseCode = httpUrlConnection.getResponseCode()
                 countOfPing--
-                Thread.sleep(PING_WAITING_INTERVAL)
             }
-            if (responseCode != 200 || responseCode != 302) {
-                logger.quiet("Host $host is unrecheable. Status code: $responseCode")
+            if (responseCode == 200 || responseCode == 302) {
+                return true
             }
         } catch (IOException | InterruptedException e) {
             logger.error("Host $host is unrecheable. Exception: $e")
         }
+        return false
     }
 
     private void runDockerCompose(InstanceState instance, File imageFile) {
