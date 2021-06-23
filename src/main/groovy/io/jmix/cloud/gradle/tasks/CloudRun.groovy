@@ -56,6 +56,7 @@ class CloudRun extends DefaultTask {
         setDescription("Runs Jmix project in cloud environment")
 
         objectMapper = new ObjectMapper()
+        project.tasks.bootBuildImage.imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
     }
 
     @TaskAction
@@ -117,11 +118,11 @@ class CloudRun extends DefaultTask {
             httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
             int retriesLeft = 30
             while (retriesLeft-- > 0) {
-                int code = httpUrlConnection.getResponseCode();
+                int code = httpUrlConnection.getResponseCode()
                 if (code == 200 || code == 302) {
-                    return true;
+                    return true
                 }
-                Thread.sleep(PING_WAITING_INTERVAL);
+                Thread.sleep(PING_WAITING_INTERVAL)
             }
         } catch (IOException | InterruptedException e) {
             logger.error("Host with path $path is unrecheable. Exception: $e")
@@ -131,7 +132,7 @@ class CloudRun extends DefaultTask {
 
     private void runDockerCompose(InstanceState instance, File imageFile) {
         try (SshSession ssh = SshSession.forInstance(instance)) {
-            String imageName = project.tasks.bootBuildImage.imageName
+            String imageName = project.tasks.bootBuildImage.imageName ?: "${project.name}:latest"
 
             ssh.execute("mkdir app")
 
