@@ -32,6 +32,10 @@ import java.util.zip.GZIPOutputStream
 
 class CloudRun extends DefaultTask {
 
+    private static final String PING_TYPE_REQUEST = "HEAD";
+    private static final int PING_TIMEOUT = 300000;
+    private static final int PING_WAITING_INTERVAL = 10000;
+
     private ObjectMapper objectMapper
 
     private String provider = 'aws'
@@ -95,7 +99,34 @@ class CloudRun extends DefaultTask {
 
         runDockerCompose(state, imageArchiveFile)
 
-        logger.quiet("Application is running on http://$state.host:8080")
+        boolean isReachable = ping("http://$state.host:8080")
+
+        if (isReachable) {
+            logger.quiet("Application is running on http://$state.host:8080")
+        } else {
+            logger.error("Application is started on http://$state.host:8080, but it cannot be reached")
+        }
+    }
+
+    private boolean ping(String path) {
+        logger.debug("ping called for path: $path")
+        try {
+            HttpURLConnection httpUrlConnection = (HttpURLConnection) new URL(path).openConnection()
+            httpUrlConnection.setConnectTimeout(PING_TIMEOUT)
+            httpUrlConnection.setReadTimeout(PING_TIMEOUT)
+            httpUrlConnection.setRequestMethod(PING_TYPE_REQUEST)
+            int retriesLeft = 30
+            while (retriesLeft-- > 0) {
+                int code = httpUrlConnection.getResponseCode();
+                if (code == 200 || code == 302) {
+                    return true;
+                }
+                Thread.sleep(PING_WAITING_INTERVAL);
+            }
+        } catch (IOException | InterruptedException e) {
+            logger.error("Host with path $path is unrecheable. Exception: $e")
+        }
+        return false
     }
 
     private void runDockerCompose(InstanceState instance, File imageFile) {
